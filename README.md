@@ -10,6 +10,8 @@ We propose the design, implementation, training, and evaluation of a feed-forwar
 
 We define the success of the neural network as the square root of the number of correctly recognized characters, so as to more heavily weight improvements to the neural network once the network is already performing well, under the guise that e.g. 70% recognition is not particularly better than 40% recognition. Training of the network will be complete once this success parameter falls above a pre-determined threshold. For the purpose of experimentation, this threshold will be varied and the success of the network will be measured accordingly.
 
+The network will be trained in handwritten digit-recognition with 10,000 images derived from <a href="http://cis.jhu.edu/~sachin/digit/digit.html">the MINST database</a> using a <a href="https://gist.github.com/4056614">simple script</a>.
+
 ## Evaluation
 
 Evaluation of the neural network will be performed using data distinct from the training data. Samples rendered by computer and printed out as well as samples handwritten by multiple third parties will be used. We will evaluate the system varying parameters such as
