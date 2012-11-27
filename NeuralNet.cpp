@@ -1,4 +1,6 @@
 #include <cmath>
+#include <cstdio>
+#include <iostream>
 
 #include "NeuralNet.h"
 
@@ -14,46 +16,66 @@ NeuralNet::NeuralNet(int inputs,
   numOutputs = outputs;
   numHiddenLayers = hiddenLayers;
   numNeuronsPerLayer = neuronsPerLayer;
+  layers = new vector<Layer*>(hiddenLayers);
 
   // Initialize each hidden layer.
   for (int i = 0; i < numHiddenLayers; i++) {
-    Layer l(neuronsPerLayer, inputs);
-    layers.push_back(l);
+    // The first hidden layer has the input set as inputs, whereas
+    // subsequent hidden layers have hidden layers as inputs.
+    int layerInputs;
+    if (i == 0) {
+      layerInputs = inputs;
+    } else {
+      layerInputs = neuronsPerLayer;
+    }
+    (*layers)[i] = new Layer(neuronsPerLayer, layerInputs);
   }
 }
 
+NeuralNet::~NeuralNet() {
+  for (int i = 0; i < layers->size(); i++) {
+    delete (*layers)[i];
+  }
+  delete layers;
+}
+
 // Compute the outputs from a given set of inputs.
-vector<double> NeuralNet::update(vector<double> &inputs,
-                                 const double bias,
-                                 const double responseThreshold) {
-  vector<double> outputs;
+void NeuralNet::feedForward(vector<double>* inputs,
+                            vector<double>* outputLayer,
+                            const double bias,
+                            const double responseThreshold) {
+  vector<double>* outputs;
 
-  for (int i = 0; i < numHiddenLayers + 1; i++) {
-    // We implement back-propagation by recursively updating the inputs and
-    // computing the outputs at the current layer in turn.
-    if (i != 0) {
-      inputs = outputs;
-    }
+  for (int i = 0; i < numHiddenLayers; i++) {
+    // We recursively update the inputs and compute the outputs at the
+    // current layer in turn.
 
-    outputs.clear();
+    outputs = new vector<double>((*layers)[i]->neuronCount());
 
     // Compute the weighted input for each neuron and pass to the sigmoid
     // function to get the output.
-    for (int j = 0; j < layers[i].neuronCount(); j++) {
+    for (int j = 0; j < (*layers)[i]->neuronCount(); j++) {
       double sum = 0;
-      Neuron n = layers[i].getNeuron(j);
-      for (int k = 0; k < n.getInputs() - 1; k++) {
-        sum += inputs[k] * n.getWeight(k);
+      Neuron *n = (*layers)[i]->getNeuron(j);
+
+      for (int k = 0; k < n->getInputs() - 1; k++) {
+        sum += (*inputs)[k] * n->getWeight(k);
       }
 
       // Add in the bias weight.
-      sum += n.getWeight(n.getInputs() - 1) * bias;
+      sum += n->getWeight(n->getInputs() - 1) * bias;
 
-      outputs.push_back(sigmoid(sum, responseThreshold));
+      (*outputs)[j] = sigmoid(sum, responseThreshold);
     }
+
+    delete inputs;
+    inputs = outputs;
   }
 
-  return outputs;
+  for (int i = 0; i < numOutputs; i++) {
+    (*outputLayer)[i] = (*outputs)[i];
+  }
+  delete outputs;
 }
 
 // Compute the sigmoid function.
@@ -61,6 +83,3 @@ inline double NeuralNet::sigmoid(double activation,
                                  double threshold) {
   return 1.0 / (1.0 + exp(-activation / threshold));
 }
-
-
-

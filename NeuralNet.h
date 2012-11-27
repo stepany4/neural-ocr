@@ -7,7 +7,8 @@ private:
   int numHiddenLayers;
   int numNeuronsPerLayer;
 
-  std::vector<Layer> layers;
+  std::vector<Layer*>* layers;
+  double* outputLayer;
 
 public:
   NeuralNet(int inputs,
@@ -15,14 +16,23 @@ public:
             int hiddenLayers,
             int neuronsPerLayer);
 
-  std::vector<double> getWeights() const;
+  ~NeuralNet();
+
+  double* getWeights() const;
 
   // Compute the outputs from a given set of inputs.
-  std::vector<double> update(std::vector<double> &inputs,
-                             const double bias,
-                             const double responseThreshold);
+  void feedForward(std::vector<double>* inputs,
+                   std::vector<double>* outputLayer,
+                   const double bias,
+                   const double responseThreshold);
 
   // Sigmoid response function.
   inline double sigmoid(double activation, double threshold);
-};
 
+  void print() {
+    for (int i = 0; i < numHiddenLayers; i++) {
+      std::cout << "Layer #" << i << "\n";
+      (*layers)[i]->printNeurons();
+    }
+  }
+};
