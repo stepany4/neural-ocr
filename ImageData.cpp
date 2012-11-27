@@ -4,8 +4,7 @@ using namespace std;
 
 // Read the image from the given file, or set the error bit if the image
 // could not be read.
-ImageData::ImageData(char *file) {
-  filename = file;
+ImageData::ImageData(char *file, bool boundingBox) {
   IplImage* gray_img;
   gray_img = cvLoadImage(file, CV_LOAD_IMAGE_GRAYSCALE);
   if (!gray_img) {
@@ -21,23 +20,28 @@ ImageData::ImageData(char *file) {
   cvThreshold(gray_img, bin_img, 128, 255,
               CV_THRESH_BINARY | CV_THRESH_OTSU);
 
-  // Compute a bounding box around the image so that we may resize only the
-  // contentful portion.
-  int min_x = width, max_x = 0;
-  int min_y = height, max_y = 0;
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      // Black pixels have 0 value.
-      if (cvGet2D(bin_img, i, j).val[0] == 0) {
-        min_x = min(min_x, j);
-        min_y = min(min_y, i);
-        max_x = max(max_x, j);
-        max_y = max(max_y, i);
+  if (boundingBox) {
+    // Compute a bounding box around the image so that we may resize only the
+    // contentful portion.
+    int min_x = width, max_x = 0;
+    int min_y = height, max_y = 0;
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        // Black pixels have 0 value.
+        if (cvGet2D(bin_img, i, j).val[0] == 0) {
+          min_x = min(min_x, j);
+          min_y = min(min_y, i);
+          max_x = max(max_x, j);
+          max_y = max(max_y, i);
+        }
       }
     }
+
+    cvSetImageROI(bin_img, cvRect(min_x, min_y, max_x, max_y));
+  } else {
+    cvSetImageROI(bin_img, cvRect(0, 0, gray_img->width, gray_img->height));
   }
 
-  cvSetImageROI(bin_img, cvRect(min_x, min_y, max_x, max_y));
   // cvGetSize() returns the size of the ROI.
   img = cvCreateImage(cvGetSize(bin_img),
                       bin_img->depth,
@@ -81,10 +85,12 @@ int ImageData::getHeight() const {
   return height;
 }
 
-// Render a summary of the image, of the form "filename: x, ypx x zpx".
-void ImageData::summary(char *buffer) const {
-  sprintf(buffer, "filename: \"%s\", %dpx x %dpx",
-                  filename, width, height);
+void ImageData::getPixels(vector<double> *v) const {
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      (*v)[i * width + j] = pixels[i * width + j];
+    }
+  }
 }
 
 bool ImageData::error() const {

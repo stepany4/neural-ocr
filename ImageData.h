@@ -6,9 +6,6 @@ private:
   // Indicates whether there was an error reading the file.
   bool readError;
 
-  // The path to the file that is being read.
-  char *filename;
-
   // The image object as stored by OpenCV.
   IplImage *img;
 
@@ -23,7 +20,7 @@ public:
 
   // Read the image file and store its data, after converting the image to
   // binary and normalizing it for size.
-  ImageData(char *file);
+  ImageData(char *file, bool boundingBox);
 
   // Free the image object.
   ~ImageData();
@@ -31,11 +28,11 @@ public:
   // Get the pixel corresponding to position (x,y).
   float pixel(int x, int y) const;
 
-  // Get the width and height of the image.
+  // Get the width and height and vector of pixels of the image.
   int getWidth() const;
   int getHeight() const;
+  void getPixels(std::vector<double> *v) const;
 
-  // Render a brief summary of the image object.
-  void summary(char *buffer) const;
+  // Report whether an error occurred reading the image.
   bool error() const;
 };
