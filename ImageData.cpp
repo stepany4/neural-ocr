@@ -4,15 +4,13 @@ using namespace std;
 
 // Read the image from the given file, or set the error bit if the image
 // could not be read.
-ImageData::ImageData(char *file, bool boundingBox) {
+ImageData::ImageData(string file, int target_size, bool boundingBox) {
   IplImage* gray_img;
-  gray_img = cvLoadImage(file, CV_LOAD_IMAGE_GRAYSCALE);
+  gray_img = cvLoadImage(file.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
   if (!gray_img) {
     readError = true;
     return;
   }
-  width = gray_img->width;
-  height = gray_img->height;
 
   // Normalize the image by first converting to binary and then resizing the
   // contentful part to a standard size.
@@ -23,10 +21,10 @@ ImageData::ImageData(char *file, bool boundingBox) {
   if (boundingBox) {
     // Compute a bounding box around the image so that we may resize only the
     // contentful portion.
-    int min_x = width, max_x = 0;
-    int min_y = height, max_y = 0;
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
+    int min_x = gray_img->width, max_x = 0;
+    int min_y = gray_img->height, max_y = 0;
+    for (int i = 0; i < gray_img->height; i++) {
+      for (int j = 0; j < gray_img->width; j++) {
         // Black pixels have 0 value.
         if (cvGet2D(bin_img, i, j).val[0] == 0) {
           min_x = min(min_x, j);
@@ -43,29 +41,39 @@ ImageData::ImageData(char *file, bool boundingBox) {
   }
 
   // cvGetSize() returns the size of the ROI.
-  img = cvCreateImage(cvGetSize(bin_img),
+  IplImage* big_img;
+  big_img = cvCreateImage(cvGetSize(bin_img),
                       bin_img->depth,
                       bin_img->nChannels);
-  cvCopy(bin_img, img, NULL);
+  cvCopy(bin_img, big_img, NULL);
+  img = cvCreateImage(cvSize(target_size, target_size),
+                      bin_img->depth,
+                      bin_img->nChannels);
+  cvResize(big_img, img);
+
+  width = target_size;
+  height = target_size;
 
   pixels = (float *)malloc(sizeof(float) * img->width * img->height);
   for (int i = 0; i < img->height; i++) {
     for (int j = 0; j < img->width; j++) {
       if (cvGet2D(img, i, j).val[0] == 0) {
-        pixels[i * img->width + j] = 0.5f;
+        pixels[i * img->width + j] = 5.0f;
       } else {
-        pixels[i * img->width + j] = -0.5f;
+        pixels[i * img->width + j] = -5.0f;
       }
     }
   }
 
   cvReleaseImage(&bin_img);
+  cvReleaseImage(&big_img);
   cvReleaseImage(&gray_img);
 }
 
 // Free the image object and the array of pixels.
 ImageData::~ImageData() {
   cvReleaseImage(&img);
+  free(pixels);
 }
 
 // Return the value of the pixel at (x,y).

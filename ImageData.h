@@ -20,7 +20,7 @@ public:
 
   // Read the image file and store its data, after converting the image to
   // binary and normalizing it for size.
-  ImageData(char *file, bool boundingBox);
+  ImageData(std::string file, int target_size, bool boundingBox);
 
   // Free the image object.
   ~ImageData();
