@@ -48,3 +48,8 @@ Once built, the program may be run with the above parameters set via command-lin
 * -a: the learning rate for back propagation,
 * -r: the response threshold for the sigmoid function,
 * -h: the number of neurons per hidden layer.
+
+## License
+
+This project is licensed under the MIT open source license. See the LICENSE
+file for details.
