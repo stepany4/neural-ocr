@@ -1,6 +1,7 @@
 #include "ImageData.h"
 
 using namespace std;
+using namespace cv;
 
 // Read the image from the given file, or set the error bit if the image
 // could not be read.

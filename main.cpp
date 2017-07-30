@@ -11,6 +11,7 @@
 #define ALPHABET_SIZE 10
 
 using namespace std;
+using namespace cv;
 
 int process_ocr(bool training, NeuralNet& nn, double bias, int iterations) {
   int correct = 0;
